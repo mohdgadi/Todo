@@ -1,10 +1,9 @@
 package main
 
 type TaskModel struct {
-	ID        int `gorm:"primary_key"`
+	ID        int
 	name      string
 	status    bool
-	listModel ListModel
 	listName  string
 	createdAt string
 }

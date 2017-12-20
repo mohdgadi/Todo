@@ -16,7 +16,7 @@ func (GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 
 	mocklist := List{
 		Name:      "List1",
-		CreatedAt: 2,
+		CreatedAt: "2",
 	}
 	data, err := json.Marshal(mocklist)
 	if err != nil {

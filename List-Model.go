@@ -1,7 +1,6 @@
 package main
 
 type ListModel struct {
-	ID        int
-	listName  string `gorm:"primary_key"`
+	listName  string
 	createdAt string
 }

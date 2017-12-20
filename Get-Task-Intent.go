@@ -17,7 +17,7 @@ func (GetTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 
 	mocklist := Task{
 		Name:      "Task 1",
-		CreatedAt: 2200,
+		CreatedAt: "2200",
 		ID:        1,
 		Status:    true,
 	}
