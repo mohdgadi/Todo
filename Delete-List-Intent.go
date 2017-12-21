@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,8 +10,14 @@ import (
 type DeleteListIntent struct {
 }
 
-func (DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
+func (d DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Println(vars["id"], " list deleted succesfully")
-	fmt.Fprintf(w, "delete list succesfully")
+	listrepo := ListRepo{}
+
+	val, err := listrepo.delete(vars["id"])
+	if err == nil && val != 0 {
+		fmt.Fprintf(w, "delete list succesfully")
+	} else {
+		fmt.Fprintf(w, "delete list unsuccesfully")
+	}
 }

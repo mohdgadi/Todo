@@ -12,12 +12,10 @@ type GetListIntent struct {
 }
 
 func (GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
+	listrepo := ListRepo{}
 	vars := mux.Vars(r)
 
-	mocklist := List{
-		Name:      "List1",
-		CreatedAt: "2",
-	}
+	mocklist, err := listrepo.get(vars["id"])
 	data, err := json.Marshal(mocklist)
 	if err != nil {
 		fmt.Println(err)
