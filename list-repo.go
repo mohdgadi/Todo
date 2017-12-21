@@ -6,22 +6,26 @@ import (
 	"time"
 )
 
+//ListModel ...
 type ListModel struct {
 	listName  string
 	createdAt string
 }
 
-type ListRep interface {
-	create(list List) (int, error)
-	delete(listName string) (int, error)
-	check(listname string) bool
-	get(listname string) (List, error)
+//ListRepository ...
+type ListRepository interface {
+	Create(list List) (int, error)
+	Delete(listName string) (int, error)
+	Check(listname string) bool
+	Get(listname string) (List, error)
 }
 
-type ListRepo struct {
+//SQLiteListRepository ...
+type SQLiteListRepository struct {
 }
 
-func (r ListRepo) get(listname string) (List, error) {
+//Get ...
+func (r SQLiteListRepository) Get(listname string) (List, error) {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 	query := "SELECT * FROM lists where listname='" + listname + "'; "
@@ -42,35 +46,15 @@ func (r ListRepo) get(listname string) (List, error) {
 	list.CreatedAt = createdat
 	list.Name = name
 
-	query = "SELECT * FROM tasks where listname='" + listname + "'; "
-	rows, err = database.Query(query)
-	if err != nil {
-		return list, err
-
-	}
-
-	var tasklist []Task
-	var Id int
-	var status int
-	var Listname string
-	for rows.Next() {
-		rows.Scan(&Id, &createdat, &name, &status, &Listname)
-		task := Task{ID: Id, Name: name, CreatedAt: createdat}
-		if status == 0 {
-			task.Status = false
-		} else {
-			task.Status = true
-		}
-		tasklist = append(tasklist, task)
-
-	}
-	list.Tasks = tasklist
+	taskRepository := SQLiteTaskRepository{}
+	list.Tasks, err = taskRepository.GetAll(listname)
 	return list, nil
 
 }
 
-func (r ListRepo) create(list List) (int, error) {
-	if r.check(list.Name) == true {
+//Create ...
+func (r SQLiteListRepository) Create(list List) (int, error) {
+	if r.Check(list.Name) == true {
 		fmt.Println("list already exists")
 		return 0, nil
 	} else {
@@ -87,8 +71,10 @@ func (r ListRepo) create(list List) (int, error) {
 	}
 	return 1, nil
 }
-func (r ListRepo) delete(listname string) (int, error) {
-	if r.check(listname) == false {
+
+//Delete ..
+func (r SQLiteListRepository) Delete(listname string) (int, error) {
+	if r.Check(listname) == false {
 
 		fmt.Println("List doesnt exist of the name")
 		return 0, nil
@@ -101,15 +87,17 @@ func (r ListRepo) delete(listname string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	taskrepo := TaskRepo{}
-	_, err = taskrepo.deletelist(listname)
+	taskRepository := SQLiteTaskRepository{}
+	_, err = taskRepository.Deletelist(listname)
 	if err != nil {
 		return 0, err
 	}
 	return 1, nil
 
 }
-func (r ListRepo) check(listname string) bool {
+
+//Check ...
+func (r SQLiteListRepository) Check(listname string) bool {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 	query := "SELECT listname FROM lists where listname='" + listname + "'; "

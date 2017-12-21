@@ -9,21 +9,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//GetTaskIntent ...
 type GetTaskIntent struct {
+	TaskRepository TaskRepository
 }
 
-func (GetTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
+//Enact ...
+func (i GetTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	taskrepo := TaskRepo{}
-	mocklist, err := taskrepo.get(vars["id"])
+
+	mocklist, err := i.TaskRepository.Get(vars["id"])
 	if mocklist.ID == 0 || err != nil {
 		fmt.Println("Doestn exist")
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		data, err := json.Marshal(mocklist)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, "Bad request")
+			w.WriteHeader(http.StatusBadRequest)
+
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")

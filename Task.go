@@ -1,5 +1,6 @@
 package main
 
+//Task ...
 type Task struct {
 	ID        int
 	Name      string

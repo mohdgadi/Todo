@@ -8,14 +8,17 @@ import (
 	"net/http"
 )
 
+//AddTaskIntent ...
 type AddTaskIntent struct {
+	TaskRepository TaskRepository
 }
 
-func (AddTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
+//Enact ...
+func (i AddTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 
 	var reqJSON List
 	var task Task
-	taskrepo := TaskRepo{}
+
 	data, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -25,11 +28,13 @@ func (AddTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 
 		if err = json.Unmarshal(data, &reqJSON); err == nil {
 			task = reqJSON.Tasks[0]
-			val, err := taskrepo.add(task, reqJSON.Name)
+			val, err := i.TaskRepository.Add(task, reqJSON.Name)
 			if err == nil && val != 0 {
 				fmt.Fprintf(w, "Task added succesfully")
 			} else {
 				fmt.Fprintf(w, "TAsk addition unsuccesful")
+				fmt.Fprintf(w, err.Error())
+				w.WriteHeader(http.StatusBadRequest)
 			}
 
 		} else {

@@ -7,14 +7,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//DeleteListIntent ...
 type DeleteListIntent struct {
+	ListRepository ListRepository
 }
 
-func (d DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
+//Enact ...
+func (i DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	listrepo := ListRepo{}
-
-	val, err := listrepo.delete(vars["id"])
+	val, err := i.ListRepository.Delete(vars["id"])
 	if err == nil && val != 0 {
 		fmt.Fprintf(w, "delete list succesfully")
 	} else {

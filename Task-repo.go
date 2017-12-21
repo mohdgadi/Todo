@@ -16,22 +16,24 @@ type TaskModel struct {
 	createdAt string
 }
 
-// TaskRep ...
-type TaskRep interface {
-	add(task Task, listname string) (int, error)
-	delete(ID string) (int, error)
-	deletetask(listname string) error
-	get(ID string) (Task, error)
-	update(task Task) (int, error)
+// TaskRepository ...
+type TaskRepository interface {
+	Add(task Task, listname string) (int, error)
+	Delete(ID string) (int, error)
+	Deletelist(listname string) (int, error)
+	Get(ID string) (Task, error)
+	GetAll(listname string) ([]Task, error)
+	Update(task Task) (int, error)
 }
 
-//TaskRepo ...
-type TaskRepo struct {
+//SQLiteTaskRepository ...
+type SQLiteTaskRepository struct {
 }
 
-func (t TaskRepo) add(tasks Task, listname string) (int, error) {
-	listrepo := ListRepo{}
-	if listrepo.check(listname) == false {
+//Add ...
+func (t SQLiteTaskRepository) Add(tasks Task, listname string) (int, error) {
+	listrepo := SQLiteListRepository{}
+	if listrepo.Check(listname) == false {
 		fmt.Println("List doesnt exist")
 		return 0, nil
 	}
@@ -53,7 +55,8 @@ func (t TaskRepo) add(tasks Task, listname string) (int, error) {
 
 }
 
-func (t TaskRepo) delete(ID string) (int, error) {
+//Delete ...
+func (t SQLiteTaskRepository) Delete(ID string) (int, error) {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 
@@ -66,7 +69,9 @@ func (t TaskRepo) delete(ID string) (int, error) {
 	}
 	return 1, nil
 }
-func (t TaskRepo) get(ID string) (Task, error) {
+
+//Get ...
+func (t SQLiteTaskRepository) Get(ID string) (Task, error) {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 	var query = "SELECT * FROM tasks WHERE ID = '" + ID + "' ;"
@@ -77,13 +82,13 @@ func (t TaskRepo) get(ID string) (Task, error) {
 	}
 
 	var name string
-	var Id int
+	var id int
 	var createdat string
 	var status int
 	var listname string
 	for rows.Next() {
-		rows.Scan(&Id, &createdat, &name, &status, &listname)
-		task.ID = Id
+		rows.Scan(&id, &createdat, &name, &status, &listname)
+		task.ID = id
 		task.CreatedAt = createdat
 		task.Name = name
 		if status == 0 {
@@ -96,7 +101,8 @@ func (t TaskRepo) get(ID string) (Task, error) {
 	return task, nil
 }
 
-func (t TaskRepo) deletelist(listname string) (int, error) {
+//Deletelist ...
+func (t SQLiteTaskRepository) Deletelist(listname string) (int, error) {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 	var query = "DELETE FROM tasks WHERE listname = '" + listname + "';"
@@ -109,7 +115,8 @@ func (t TaskRepo) deletelist(listname string) (int, error) {
 	return 0, nil
 }
 
-func (t TaskRepo) update(task Task) (int, error) {
+//Update ...
+func (t SQLiteTaskRepository) Update(task Task) (int, error) {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 	var status string
@@ -118,7 +125,8 @@ func (t TaskRepo) update(task Task) (int, error) {
 	} else {
 		status = "1"
 	}
-	var query = "UPDATE tasks SET status=" + status + "WHERE ID=" + strconv.Itoa(task.ID) + ";"
+	var query = "UPDATE tasks SET status= '" + status + "' WHERE ID= '" + strconv.Itoa(task.ID) + "';"
+	fmt.Println(query)
 	statement, err := database.Prepare(query)
 	res, err := statement.Exec()
 	affected, err := res.RowsAffected()
@@ -126,4 +134,35 @@ func (t TaskRepo) update(task Task) (int, error) {
 		return 0, err
 	}
 	return 1, nil
+}
+
+//GetAll ...
+func (t SQLiteTaskRepository) GetAll(listname string) ([]Task, error) {
+	database, _ := sql.Open("sqlite3", "./test.db")
+	defer database.Close()
+	query := "SELECT * FROM tasks where listname='" + listname + "'; "
+	rows, err := database.Query(query)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+
+	}
+	var createdat string
+	var tasklist []Task
+	var id int
+	var status int
+	var Listname string
+	var name string
+	for rows.Next() {
+		rows.Scan(&id, &createdat, &name, &status, &Listname)
+		task := Task{ID: id, Name: name, CreatedAt: createdat}
+		if status == 0 {
+			task.Status = false
+		} else {
+			task.Status = true
+		}
+		tasklist = append(tasklist, task)
+
+	}
+	return tasklist, nil
 }

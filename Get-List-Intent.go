@@ -8,14 +8,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//GetListIntent ...
 type GetListIntent struct {
+	ListRepository ListRepository
 }
 
-func (GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
-	listrepo := ListRepo{}
+//Enact ...
+func (i GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	mocklist, err := listrepo.get(vars["id"])
+	mocklist, err := i.ListRepository.Get(vars["id"])
 	data, err := json.Marshal(mocklist)
 	if err != nil {
 		fmt.Println(err)

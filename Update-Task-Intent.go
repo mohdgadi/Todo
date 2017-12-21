@@ -8,13 +8,15 @@ import (
 	"net/http"
 )
 
+//UpdateTaskIntent ...
 type UpdateTaskIntent struct {
+	TaskRepository TaskRepository
 }
 
-func (UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
+//Enact ...
+func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	var reqJSON Task
 
-	taskrepo := TaskRepo{}
 	data, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -23,11 +25,11 @@ func (UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	} else {
 
 		if err = json.Unmarshal(data, &reqJSON); err == nil {
-			val, err := taskrepo.update(reqJSON)
+			val, err := i.TaskRepository.Update(reqJSON)
 			if err == nil && val != 0 {
 				fmt.Fprintf(w, "Task updated succesfully")
 			} else {
-				fmt.Fprintf(w, "TAsk addition unsuccesful")
+				fmt.Fprintf(w, "TAsk updation unsuccesful")
 				w.WriteHeader(http.StatusBadRequest)
 			}
 		} else {
@@ -36,5 +38,4 @@ func (UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	fmt.Println("Update Task", reqJSON.ID, " to ", reqJSON.Status)
-	fmt.Fprintf(w, "Updated task status")
 }
