@@ -12,13 +12,13 @@ func main() {
 	router := mux.NewRouter()
 	listRepository := SQLiteListRepository{}
 	taskRepository := SQLiteTaskRepository{}
-	getlistintent := GetListIntent{listRepository}
+	getlistintent := GetListIntent{listRepository, taskRepository}
 	createlistintent := CreateListIntent{listRepository}
-	deletelistintent := DeleteListIntent{listRepository}
+	deletelistintent := DeleteListIntent{listRepository, taskRepository}
 	deletetaskintent := DeleteTaskIntent{taskRepository}
 	updatetaskintent := UpdateTaskIntent{taskRepository}
 	gettaskintent := GetTaskIntent{taskRepository}
-	addtaskintent := AddTaskIntent{taskRepository}
+	addtaskintent := AddTaskIntent{taskRepository, listRepository}
 
 	router.HandleFunc("/lists", createlistintent.Enact).Methods("POST")
 	router.HandleFunc("/lists/{id}", deletelistintent.Enact).Methods("DELETE")

@@ -16,17 +16,14 @@ type UpdateTaskIntent struct {
 //Enact ...
 func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	var reqJSON Task
-
 	data, err := ioutil.ReadAll(r.Body)
-
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
-
 		if err = json.Unmarshal(data, &reqJSON); err == nil {
-			val, err := i.TaskRepository.Update(reqJSON)
-			if err == nil && val != 0 {
+			err := i.TaskRepository.Update(reqJSON)
+			if err == nil {
 				fmt.Fprintf(w, "Task updated succesfully")
 			} else {
 				fmt.Fprintf(w, "TAsk updation unsuccesful")

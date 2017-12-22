@@ -17,27 +17,26 @@ type CreateListIntent struct {
 func (c CreateListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	var reqJSON List
 	data, err := ioutil.ReadAll(r.Body)
-
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 	} else {
-
 		if err = json.Unmarshal(data, &reqJSON); err == nil {
+			if reqJSON.Name == "" {
+				fmt.Fprintf(w, "Request Name cant be empty")
+				w.WriteHeader(http.StatusBadRequest)
+			}
 			list := List{Name: reqJSON.Name}
-			val, err := c.ListRepository.Create(list)
-			if err == nil && val != 0 {
+			err := c.ListRepository.Create(list)
+			if err == nil {
 				fmt.Fprintf(w, "created successfully")
 				fmt.Println("created successfully")
 			} else {
-				fmt.Fprintf(w, "Error occured")
 				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintf(w, err.Error())
 			}
-
 		} else {
-			fmt.Fprintf(w, "Error occured")
-
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, err.Error())
 		}
 	}
-
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -17,7 +16,6 @@ type GetTaskIntent struct {
 //Enact ...
 func (i GetTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-
 	mocklist, err := i.TaskRepository.Get(vars["id"])
 	if mocklist.ID == 0 || err != nil {
 		fmt.Println("Doestn exist")
@@ -27,7 +25,6 @@ func (i GetTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Fprint(w, "Bad request")
 			w.WriteHeader(http.StatusBadRequest)
-
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")

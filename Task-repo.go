@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -18,12 +19,12 @@ type TaskModel struct {
 
 // TaskRepository ...
 type TaskRepository interface {
-	Add(task Task, listname string) (int, error)
-	Delete(ID string) (int, error)
-	Deletelist(listname string) (int, error)
+	Add(task Task, listname string) error
+	Delete(ID string) error
+	Deletelist(listname string) error
 	Get(ID string) (Task, error)
 	GetAll(listname string) ([]Task, error)
-	Update(task Task) (int, error)
+	Update(task Task) error
 }
 
 //SQLiteTaskRepository ...
@@ -31,43 +32,38 @@ type SQLiteTaskRepository struct {
 }
 
 //Add ...
-func (t SQLiteTaskRepository) Add(tasks Task, listname string) (int, error) {
-	listrepo := SQLiteListRepository{}
-	if listrepo.Check(listname) == false {
-		fmt.Println("List doesnt exist")
-		return 0, nil
-	}
-	fmt.Println("reached")
-	task := TaskModel{name: tasks.Name, status: false, listName: listname}
+func (t SQLiteTaskRepository) Add(tasks Task, listname string) error {
+
+	task := TaskModel{name: tasks.Name, status: false, listName: listname} //use factory
 	task.createdAt = time.Now().Local().Format("2006-01-02")
 
-	database, _ := sql.Open("sqlite3", "./test.db")
+	database, _ := sql.Open("sqlite3", "./test.db") //enviroment variables
 	defer database.Close()
 
 	var query = "INSERT INTO tasks (createdat,name,status,listname) VALUES ( '" + task.createdAt + "','" + task.name + "','0','" + task.listName + "')"
 	statement, err := database.Prepare(query)
 	statement.Exec()
 	if err != nil {
-		return 0, err
-
+		return err
 	}
-	return 1, nil
-
+	return nil
 }
 
 //Delete ...
-func (t SQLiteTaskRepository) Delete(ID string) (int, error) {
+func (t SQLiteTaskRepository) Delete(ID string) error {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-
 	var query = "DELETE FROM tasks WHERE ID = '" + ID + "' ;"
 	statement, err := database.Prepare(query)
 	res, err := statement.Exec()
 	affected, err := res.RowsAffected()
-	if affected == 0 || err != nil {
-		return 0, err
+	if affected == 0 {
+		return errors.New("Entry Not found")
 	}
-	return 1, nil
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //Get ...
@@ -80,7 +76,6 @@ func (t SQLiteTaskRepository) Get(ID string) (Task, error) {
 	if err != nil {
 		return task, err
 	}
-
 	var name string
 	var id int
 	var createdat string
@@ -96,27 +91,26 @@ func (t SQLiteTaskRepository) Get(ID string) (Task, error) {
 		} else {
 			task.Status = true
 		}
-
 	}
 	return task, nil
 }
 
 //Deletelist ...
-func (t SQLiteTaskRepository) Deletelist(listname string) (int, error) {
+func (t SQLiteTaskRepository) Deletelist(listname string) error {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 	var query = "DELETE FROM tasks WHERE listname = '" + listname + "';"
 	statement, err := database.Prepare(query)
 	statement.Exec()
 	if err != nil {
-		return 0, err
+		return err
 	}
 	fmt.Println("deleted task list")
-	return 0, nil
+	return nil
 }
 
 //Update ...
-func (t SQLiteTaskRepository) Update(task Task) (int, error) {
+func (t SQLiteTaskRepository) Update(task Task) error {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 	var status string
@@ -126,14 +120,13 @@ func (t SQLiteTaskRepository) Update(task Task) (int, error) {
 		status = "1"
 	}
 	var query = "UPDATE tasks SET status= '" + status + "' WHERE ID= '" + strconv.Itoa(task.ID) + "';"
-	fmt.Println(query)
 	statement, err := database.Prepare(query)
-	res, err := statement.Exec()
-	affected, err := res.RowsAffected()
-	if affected == 0 || err != nil {
-		return 0, err
+	_, err = statement.Exec()
+
+	if err != nil {
+		return err
 	}
-	return 1, nil
+	return nil
 }
 
 //GetAll ...
@@ -145,7 +138,6 @@ func (t SQLiteTaskRepository) GetAll(listname string) ([]Task, error) {
 	defer rows.Close()
 	if err != nil {
 		return nil, err
-
 	}
 	var createdat string
 	var tasklist []Task
