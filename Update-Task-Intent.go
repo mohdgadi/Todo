@@ -25,6 +25,7 @@ func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 			err := i.TaskRepository.Update(reqJSON)
 			if err == nil {
 				fmt.Fprintf(w, "Task updated succesfully")
+				w.WriteHeader(http.StatusOK)
 			} else {
 				fmt.Fprintf(w, "TAsk updation unsuccesful")
 				w.WriteHeader(http.StatusBadRequest)
@@ -34,5 +35,4 @@ func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	}
-	fmt.Println("Update Task", reqJSON.ID, " to ", reqJSON.Status)
 }

@@ -19,6 +19,7 @@ func (c CreateListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
+		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		if err = json.Unmarshal(data, &reqJSON); err == nil {
 			if reqJSON.Name == "" {

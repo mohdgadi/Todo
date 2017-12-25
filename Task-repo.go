@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -25,7 +24,7 @@ type TaskRepository interface {
 	Get(ID string) (Task, error)
 	GetAll(listname string) ([]Task, error)
 	Update(task Task) error
-	TaskModelFactory(tasks Task, listname string) TaskModel
+	TaskModelFactory(tasks Task, listname string, createdat string) TaskModel
 }
 
 //SQLiteTaskRepository ...
@@ -34,8 +33,8 @@ type SQLiteTaskRepository struct {
 
 //Add ...
 func (t SQLiteTaskRepository) Add(tasks Task, listname string) error {
-	task := t.TaskModelFactory(tasks, listname)
-	task.createdAt = time.Now().Local().Format("2006-01-02")
+	createdAt := time.Now().Local().Format("2006-01-02")
+	task := t.TaskModelFactory(tasks, listname, createdAt)
 
 	database, _ := sql.Open("sqlite3", "./test.db") //enviroment variables
 	defer database.Close()
@@ -56,6 +55,9 @@ func (t SQLiteTaskRepository) Delete(ID string) error {
 	var query = "DELETE FROM tasks WHERE ID = '" + ID + "' ;"
 	statement, err := database.Prepare(query)
 	res, err := statement.Exec()
+	if err != nil {
+		return err
+	}
 	affected, err := res.RowsAffected()
 	if affected == 0 {
 		return errors.New("Entry Not found")
@@ -72,10 +74,10 @@ func (t SQLiteTaskRepository) Get(ID string) (Task, error) {
 	defer database.Close()
 	var query = "SELECT * FROM tasks WHERE ID = '" + ID + "' ;"
 	rows, err := database.Query(query)
-	var task Task
 	if err != nil {
-		return task, err
+		return Task{}, err
 	}
+	var task Task
 	var name string
 	var id int
 	var createdat string
@@ -105,7 +107,6 @@ func (t SQLiteTaskRepository) Deletelist(listname string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("deleted task list")
 	return nil
 }
 
@@ -160,7 +161,7 @@ func (t SQLiteTaskRepository) GetAll(listname string) ([]Task, error) {
 }
 
 //TaskModelFactory ...
-func (t SQLiteTaskRepository) TaskModelFactory(tasks Task, listname string) TaskModel {
-	taskmodel := TaskModel{name: tasks.Name, status: false, listName: listname}
+func (t SQLiteTaskRepository) TaskModelFactory(tasks Task, listname string, createdat string) TaskModel {
+	taskmodel := TaskModel{name: tasks.Name, status: false, listName: listname, createdAt: createdat}
 	return taskmodel
 }

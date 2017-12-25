@@ -17,6 +17,12 @@ type GetListIntent struct {
 //Enact ...
 func (i GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	exists := i.ListRepository.Check(vars["id"])
+	if exists == false {
+		fmt.Fprintf(w, "List doesnt exist")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	mocklist, err := i.ListRepository.Get(vars["id"])
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
@@ -36,5 +42,4 @@ func (i GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
-	fmt.Println("list ", vars["id"], " Delivered successfuly")
 }

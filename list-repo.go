@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -40,11 +39,9 @@ func (r SQLiteListRepository) Get(listname string) (List, error) {
 	list := List{}
 	var name string
 	var createdat string
-	count := 0 // Code cleanup
+	// Code cleanup
 	for rows.Next() {
-		count++
 		rows.Scan(&name, &createdat)
-
 	}
 	list.CreatedAt = createdat
 	list.Name = name
@@ -55,7 +52,6 @@ func (r SQLiteListRepository) Get(listname string) (List, error) {
 //Create ...
 func (r SQLiteListRepository) Create(list List) error {
 	if r.Check(list.Name) == true {
-		fmt.Println("list already exists")
 		return errors.New("List already exist")
 	}
 	//factory
@@ -74,8 +70,6 @@ func (r SQLiteListRepository) Create(list List) error {
 //Delete ..
 func (r SQLiteListRepository) Delete(listname string) error {
 	if r.Check(listname) == false {
-
-		fmt.Println("List doesnt exist of the name")
 		return errors.New("List not found")
 	}
 	database, _ := sql.Open("sqlite3", "./test.db")
@@ -104,7 +98,6 @@ func (r SQLiteListRepository) Check(listname string) bool {
 	for rows.Next() {
 		count++
 		rows.Scan(&name)
-
 	}
 	if count == 0 {
 		return false
