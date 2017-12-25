@@ -19,6 +19,7 @@ type ListRepository interface {
 	Delete(listName string) error
 	Check(listname string) bool
 	Get(listname string) (List, error)
+	ListModelFactory(list List, time string) ListModel
 }
 
 //SQLiteListRepository ...
@@ -32,10 +33,11 @@ func (r SQLiteListRepository) Get(listname string) (List, error) {
 	query := "SELECT * FROM lists where listname='" + listname + "'; "
 	rows, err := database.Query(query)
 	defer rows.Close() //error after this
-	var list = List{}
+
 	if err != nil {
-		return list, err
+		return List{}, err
 	}
+	list := List{}
 	var name string
 	var createdat string
 	count := 0 // Code cleanup
@@ -56,7 +58,8 @@ func (r SQLiteListRepository) Create(list List) error {
 		fmt.Println("list already exists")
 		return errors.New("List already exist")
 	}
-	listmodel := ListModel{listName: list.Name, createdAt: time.Now().Local().Format("2006-01-02")} // use factory function
+	//factory
+	listmodel := r.ListModelFactory(list, time.Now().Local().Format("2006-01-02"))
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
 	var query = "INSERT INTO lists (listname , createdat) VALUES ( '" + listmodel.listName + "' , '" + listmodel.createdAt + "')"
@@ -94,7 +97,6 @@ func (r SQLiteListRepository) Check(listname string) bool {
 	rows, err := database.Query(query)
 	defer rows.Close()
 	if err != nil {
-		panic(err)
 		return false
 	}
 	var name string
@@ -108,4 +110,10 @@ func (r SQLiteListRepository) Check(listname string) bool {
 		return false
 	}
 	return true
+}
+
+//ListModelFactory ...
+func (r SQLiteListRepository) ListModelFactory(list List, time string) ListModel {
+	listmodel := ListModel{listName: list.Name, createdAt: time}
+	return listmodel
 }

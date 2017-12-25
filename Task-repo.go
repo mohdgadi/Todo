@@ -25,6 +25,7 @@ type TaskRepository interface {
 	Get(ID string) (Task, error)
 	GetAll(listname string) ([]Task, error)
 	Update(task Task) error
+	TaskModelFactory(tasks Task, listname string) TaskModel
 }
 
 //SQLiteTaskRepository ...
@@ -33,8 +34,7 @@ type SQLiteTaskRepository struct {
 
 //Add ...
 func (t SQLiteTaskRepository) Add(tasks Task, listname string) error {
-
-	task := TaskModel{name: tasks.Name, status: false, listName: listname} //use factory
+	task := t.TaskModelFactory(tasks, listname)
 	task.createdAt = time.Now().Local().Format("2006-01-02")
 
 	database, _ := sql.Open("sqlite3", "./test.db") //enviroment variables
@@ -157,4 +157,10 @@ func (t SQLiteTaskRepository) GetAll(listname string) ([]Task, error) {
 
 	}
 	return tasklist, nil
+}
+
+//TaskModelFactory ...
+func (t SQLiteTaskRepository) TaskModelFactory(tasks Task, listname string) TaskModel {
+	taskmodel := TaskModel{name: tasks.Name, status: false, listName: listname}
+	return taskmodel
 }
