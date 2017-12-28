@@ -1,6 +1,8 @@
 
 # Created by https://www.gitignore.io/api/macos,visualstudiocode
-.test.db
+./test.db
+test.db
+config.go
 .todo
 ### macOS ###
 *.DS_Store
