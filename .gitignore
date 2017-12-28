@@ -1,7 +1,7 @@
 
 # Created by https://www.gitignore.io/api/macos,visualstudiocode
-test.db
-todo
+.test.db
+.todo
 ### macOS ###
 *.DS_Store
 .AppleDouble

@@ -12,7 +12,7 @@ type DeleteListIntent struct {
 	ListRepository ListRepository
 }
 
-// Enact gets listname from URL parameter and deletes the list
+// Enact gets listname from URL parameter and deletes the list.
 func (i DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	err := i.ListRepository.Delete(vars["id"])
@@ -21,6 +21,5 @@ func (i DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintf(w, "delete list succesfully")
 		w.WriteHeader(http.StatusOK)
-
 	}
 }

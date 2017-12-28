@@ -21,7 +21,6 @@ func (i GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	data, err := json.Marshal(mocklist)
 	if err != nil {
 		fmt.Println(err)

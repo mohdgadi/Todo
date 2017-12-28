@@ -35,11 +35,10 @@ func main() {
 //Use camel casing:done
 //ReName getall and other funcctions:done
 //check rows.next:done
-//http write in one line
+//http write in one line:done
 //return error in one line:done
 //break line:done
 //define variables in a single block:done
-//open db only once
-//gitignore.io
-//enviroment constants
+//gitignore.io:done
+//enviroment constants:done
 //change dependencies:done

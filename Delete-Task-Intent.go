@@ -20,7 +20,8 @@ func (i DeleteTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Fprintf(w, "delete task succesfully")
 		w.WriteHeader(http.StatusOK)
-	} else {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	http.Error(w, err.Error(), http.StatusBadRequest)
+
 }

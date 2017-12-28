@@ -32,7 +32,7 @@ func (r SQLiteListRepository) Get(listName string) (List, error) {
 		name      string
 		createdAt string
 	)
-	database, _ := sql.Open("sqlite3", "./test.db")
+	database, _ := sql.Open(DbType, DbName)
 	defer database.Close()
 	query := "SELECT * FROM lists where listname='" + listName + "'; "
 	rows, err := database.Query(query)
@@ -48,9 +48,7 @@ func (r SQLiteListRepository) Get(listName string) (List, error) {
 	if count == 0 {
 		return List{}, errors.New("List doesnt exist")
 	}
-	list := List{}
-	list.CreatedAt = createdAt
-	list.Name = name
+	list := List{CreatedAt: createdAt, Name: name}
 	list.Tasks, err = r.TaskRepository.GetTaskList(listName)
 	return list, err
 }
@@ -60,8 +58,8 @@ func (r SQLiteListRepository) Create(list List) error {
 	if r.Check(list.Name) == true {
 		return errors.New("List already exist")
 	}
-	listmodel := r.ListModelFactory(list, time.Now().Local().Format("2006-01-02"))
-	database, _ := sql.Open("sqlite3", "./test.db")
+	listmodel := r.ListModelFactory(list, time.Now().Local().Format(TimeFormat))
+	database, _ := sql.Open(DbType, DbName)
 	defer database.Close()
 	query := "INSERT INTO lists (listname , createdat) VALUES ( '" +
 		listmodel.listName + "' , '" + listmodel.createdAt + "')"
@@ -75,7 +73,7 @@ func (r SQLiteListRepository) Delete(listName string) error {
 	if r.Check(listName) == false {
 		return errors.New("List not found")
 	}
-	database, _ := sql.Open("sqlite3", "./test.db")
+	database, _ := sql.Open(DbType, DbName)
 	defer database.Close()
 	err := r.TaskRepository.DeleteTaskList(listName)
 	if err != nil {
@@ -89,7 +87,7 @@ func (r SQLiteListRepository) Delete(listName string) error {
 
 // Check method checks if a list exists in the database.
 func (r SQLiteListRepository) Check(listName string) bool {
-	database, _ := sql.Open("sqlite3", "./test.db")
+	database, _ := sql.Open(DbType, DbName)
 	defer database.Close()
 	query := "SELECT listname FROM lists where listname='" + listName + "'; "
 	rows, err := database.Query(query)
