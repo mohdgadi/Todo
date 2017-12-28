@@ -3,36 +3,28 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 
 	"net/http"
 )
 
-//UpdateTaskIntent ...
+// UpdateTaskIntent used to update task status in the database.
 type UpdateTaskIntent struct {
 	TaskRepository TaskRepository
 }
 
-//Enact ...
+// Enact method is usedt change the status of task completed.
 func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	var reqJSON Task
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Fprintf(w, err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		if err = json.Unmarshal(data, &reqJSON); err == nil {
-			err := i.TaskRepository.Update(reqJSON)
-			if err == nil {
-				fmt.Fprintf(w, "Task updated succesfully")
-				w.WriteHeader(http.StatusOK)
-			} else {
-				fmt.Fprintf(w, "TAsk updation unsuccesful")
-				w.WriteHeader(http.StatusBadRequest)
-			}
+	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
+		err := i.TaskRepository.Update(reqJSON)
+		if err == nil {
+			fmt.Fprintf(w, "Task updated succesfully")
+			w.WriteHeader(http.StatusOK)
 		} else {
-			fmt.Fprintf(w, err.Error())
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Bad request", http.StatusBadRequest)
 		}
+	} else {
+		http.Error(w, "Bad request", http.StatusBadRequest)
 	}
+
 }

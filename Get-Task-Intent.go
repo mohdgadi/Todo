@@ -2,34 +2,32 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-//GetTaskIntent ...
+// GetTaskIntent used to retrieve a single task from the repository.
 type GetTaskIntent struct {
 	TaskRepository TaskRepository
 }
 
-//Enact ...
+// Enact method takes task id as URL parameter and serves a task object.
 func (i GetTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	mocklist, err := i.TaskRepository.Get(vars["id"])
 	if mocklist.ID == 0 || err != nil {
-		fmt.Fprintf(w, "Bad request , Doesnt exist")
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Bad request", http.StatusBadRequest)
 	} else {
 		data, err := json.Marshal(mocklist)
 		if err != nil {
-			fmt.Fprint(w, "Bad request")
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
+		return
 	}
 
 }

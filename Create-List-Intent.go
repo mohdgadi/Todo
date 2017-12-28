@@ -3,41 +3,32 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 
 	"net/http"
 )
 
-//CreateListIntent ...
+// CreateListIntent used to create list in the repository.
 type CreateListIntent struct {
 	ListRepository ListRepository
 }
 
-//Enact ...
+// Enact takes JSON request and creates a list.
 func (c CreateListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	var reqJSON List
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Fprintf(w, err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		if err = json.Unmarshal(data, &reqJSON); err == nil {
-			if reqJSON.Name == "" {
-				fmt.Fprintf(w, "Request Name cant be empty")
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			list := List{Name: reqJSON.Name}
-			err := c.ListRepository.Create(list)
-			if err == nil {
-				fmt.Fprintf(w, "created successfully")
-				fmt.Println("created successfully")
-			} else {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprintf(w, err.Error())
-			}
-		} else {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, err.Error())
+	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
+		if reqJSON.Name == "" {
+			http.Error(w, "Request Name cant be empty", http.StatusBadRequest)
+			fmt.Fprintf(w, "Request Name cant be empty")
 		}
+		list := List{Name: reqJSON.Name}
+		err := c.ListRepository.Create(list)
+		if err == nil {
+			fmt.Fprintf(w, "created successfully")
+			w.WriteHeader(http.StatusOK)
+		} else {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+	} else {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 }

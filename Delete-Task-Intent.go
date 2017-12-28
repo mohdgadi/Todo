@@ -8,12 +8,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//DeleteTaskIntent ...
+// DeleteTaskIntent used to delete a single task from the reposiotry.
 type DeleteTaskIntent struct {
 	TaskRepository TaskRepository
 }
 
-//Enact ...
+// Enact takes task ID as URL parameter deletes a singular task by ID.
 func (i DeleteTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	err := i.TaskRepository.Delete(vars["id"])
@@ -21,7 +21,6 @@ func (i DeleteTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "delete task succesfully")
 		w.WriteHeader(http.StatusOK)
 	} else {
-		fmt.Fprintf(w, err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 }

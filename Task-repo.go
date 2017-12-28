@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//TaskModel ...
+// TaskModel ...
 type TaskModel struct {
 	ID        int
 	name      string
@@ -16,43 +16,38 @@ type TaskModel struct {
 	createdAt string
 }
 
-// TaskRepository ...
+// TaskRepository interface.
 type TaskRepository interface {
-	Add(task Task, listname string) error
+	Add(task Task, listName string) error
 	Delete(ID string) error
-	Deletelist(listname string) error
+	DeleteTaskList(listName string) error
 	Get(ID string) (Task, error)
-	GetAll(listname string) ([]Task, error)
+	GetTaskList(listName string) ([]Task, error)
 	Update(task Task) error
-	TaskModelFactory(tasks Task, listname string, createdat string) TaskModel
 }
 
-//SQLiteTaskRepository ...
+// SQLiteTaskRepository implementing TaskRepository interface..
 type SQLiteTaskRepository struct {
 }
 
-//Add ...
-func (t SQLiteTaskRepository) Add(tasks Task, listname string) error {
+// Add method adds task to the database.
+func (t SQLiteTaskRepository) Add(tasks Task, listName string) error {
 	createdAt := time.Now().Local().Format("2006-01-02")
-	task := t.TaskModelFactory(tasks, listname, createdAt)
-
+	task := TaskModelFactory(tasks, listName, createdAt)
 	database, _ := sql.Open("sqlite3", "./test.db") //enviroment variables
 	defer database.Close()
-
-	var query = "INSERT INTO tasks (createdat,name,status,listname) VALUES ( '" + task.createdAt + "','" + task.name + "','0','" + task.listName + "')"
+	query := "INSERT INTO tasks (createdat,name,status,listname) VALUES ( '" +
+		task.createdAt + "','" + task.name + "','0','" + task.listName + "')"
 	statement, err := database.Prepare(query)
 	statement.Exec()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
-//Delete ...
+// Delete method deletes a task from the database.
 func (t SQLiteTaskRepository) Delete(ID string) error {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	var query = "DELETE FROM tasks WHERE ID = '" + ID + "' ;"
+	query := "DELETE FROM tasks WHERE ID = '" + ID + "' ;"
 	statement, err := database.Prepare(query)
 	res, err := statement.Exec()
 	if err != nil {
@@ -62,31 +57,31 @@ func (t SQLiteTaskRepository) Delete(ID string) error {
 	if affected == 0 {
 		return errors.New("Entry Not found")
 	}
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
-//Get ...
+// Get method retrieves a task from the database.
 func (t SQLiteTaskRepository) Get(ID string) (Task, error) {
+	var (
+		task      Task
+		name      string
+		id        int
+		createdAt string
+		status    int
+		listName  string
+	)
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	var query = "SELECT * FROM tasks WHERE ID = '" + ID + "' ;"
+	query := "SELECT * FROM tasks WHERE ID = '" + ID + "' ;"
 	rows, err := database.Query(query)
 	if err != nil {
 		return Task{}, err
 	}
-	var task Task
-	var name string
-	var id int
-	var createdat string
-	var status int
-	var listname string
+
 	for rows.Next() {
-		rows.Scan(&id, &createdat, &name, &status, &listname)
+		rows.Scan(&id, &createdAt, &name, &status, &listName)
 		task.ID = id
-		task.CreatedAt = createdat
+		task.CreatedAt = createdAt
 		task.Name = name
 		if status == 0 {
 			task.Status = false
@@ -97,71 +92,69 @@ func (t SQLiteTaskRepository) Get(ID string) (Task, error) {
 	return task, nil
 }
 
-//Deletelist ...
-func (t SQLiteTaskRepository) Deletelist(listname string) error {
+// DeleteTaskList method deletes a list of task having same listname.
+func (t SQLiteTaskRepository) DeleteTaskList(listName string) error {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	var query = "DELETE FROM tasks WHERE listname = '" + listname + "';"
+	query := "DELETE FROM tasks WHERE listname = '" + listName + "';"
 	statement, err := database.Prepare(query)
 	statement.Exec()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
-//Update ...
+// Update method updates task status.
 func (t SQLiteTaskRepository) Update(task Task) error {
+	var status string
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	var status string
 	if task.Status == false {
 		status = "0"
 	} else {
 		status = "1"
 	}
-	var query = "UPDATE tasks SET status= '" + status + "' WHERE ID= '" + strconv.Itoa(task.ID) + "';"
+	query := "UPDATE tasks SET status= '" + status +
+		"' WHERE ID= '" + strconv.Itoa(task.ID) + "';"
 	statement, err := database.Prepare(query)
 	_, err = statement.Exec()
-
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
-//GetAll ...
-func (t SQLiteTaskRepository) GetAll(listname string) ([]Task, error) {
+// GetTaskList retrieves a list of task having list name.
+func (t SQLiteTaskRepository) GetTaskList(listName string) ([]Task, error) {
+	var (
+		createdAt string
+		taskList  []Task
+		id        int
+		status    int
+		ListName  string
+		name      string
+	)
+
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	query := "SELECT * FROM tasks where listname='" + listname + "'; "
+	query := "SELECT * FROM tasks where listname='" + listName + "'; "
 	rows, err := database.Query(query)
 	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
-	var createdat string
-	var tasklist []Task
-	var id int
-	var status int
-	var Listname string
-	var name string
+
 	for rows.Next() {
-		rows.Scan(&id, &createdat, &name, &status, &Listname)
-		task := Task{ID: id, Name: name, CreatedAt: createdat}
+		rows.Scan(&id, &createdAt, &name, &status, &ListName)
+		task := Task{ID: id, Name: name, CreatedAt: createdAt}
 		if status == 0 {
 			task.Status = false
 		} else {
 			task.Status = true
 		}
-		tasklist = append(tasklist, task)
+		taskList = append(taskList, task)
 
 	}
-	return tasklist, nil
+	return taskList, nil
 }
 
-//TaskModelFactory ...
-func (t SQLiteTaskRepository) TaskModelFactory(tasks Task, listname string, createdat string) TaskModel {
-	taskmodel := TaskModel{name: tasks.Name, status: false, listName: listname, createdAt: createdat}
+// TaskModelFactory takes input as Task and returns a TaskModel .
+func TaskModelFactory(tasks Task, listName string, createdAt string) TaskModel {
+	taskmodel := TaskModel{name: tasks.Name, status: false, listName: listName, createdAt: createdAt}
 	return taskmodel
 }

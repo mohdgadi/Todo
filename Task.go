@@ -1,6 +1,6 @@
 package main
 
-//Task ...
+// Task Entity.
 type Task struct {
 	ID        int
 	Name      string

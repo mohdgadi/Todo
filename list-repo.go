@@ -6,106 +6,101 @@ import (
 	"time"
 )
 
-//ListModel ...
+// ListModel ...
 type ListModel struct {
 	listName  string
 	createdAt string
 }
 
-//ListRepository ...
+// ListRepository interface...
 type ListRepository interface {
 	Create(list List) error
 	Delete(listName string) error
-	Check(listname string) bool
-	Get(listname string) (List, error)
+	Check(listName string) bool
+	Get(listName string) (List, error)
 	ListModelFactory(list List, time string) ListModel
 }
 
-//SQLiteListRepository ...
+// SQLiteListRepository implementing ListRepository interface...
 type SQLiteListRepository struct {
+	TaskRepository TaskRepository
 }
 
-//Get ...
-func (r SQLiteListRepository) Get(listname string) (List, error) {
+// Get method to retrieve a list of tasks from database.
+func (r SQLiteListRepository) Get(listName string) (List, error) {
+	var (
+		name      string
+		createdAt string
+	)
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	query := "SELECT * FROM lists where listname='" + listname + "'; "
+	query := "SELECT * FROM lists where listname='" + listName + "'; "
 	rows, err := database.Query(query)
-	defer rows.Close() //error after this
-
+	defer rows.Close()
 	if err != nil {
 		return List{}, err
 	}
-	list := List{}
-	var name string
-	var createdat string
-	// Code cleanup
+	count := 0
 	for rows.Next() {
-		rows.Scan(&name, &createdat)
+		rows.Scan(&name, &createdAt)
+		count++
 	}
-	list.CreatedAt = createdat
+	if count == 0 {
+		return List{}, errors.New("List doesnt exist")
+	}
+	list := List{}
+	list.CreatedAt = createdAt
 	list.Name = name
-	return list, nil
-
+	list.Tasks, err = r.TaskRepository.GetTaskList(listName)
+	return list, err
 }
 
-//Create ...
+// Create method adds a list to the repository.
 func (r SQLiteListRepository) Create(list List) error {
 	if r.Check(list.Name) == true {
 		return errors.New("List already exist")
 	}
-	//factory
 	listmodel := r.ListModelFactory(list, time.Now().Local().Format("2006-01-02"))
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	var query = "INSERT INTO lists (listname , createdat) VALUES ( '" + listmodel.listName + "' , '" + listmodel.createdAt + "')"
+	query := "INSERT INTO lists (listname , createdat) VALUES ( '" +
+		listmodel.listName + "' , '" + listmodel.createdAt + "')"
 	statement, err := database.Prepare(query)
 	statement.Exec()
-	if err != nil {
-		return err // use custom error
-	}
-	return nil
+	return err
 }
 
-//Delete ..
-func (r SQLiteListRepository) Delete(listname string) error {
-	if r.Check(listname) == false {
+// Delete method deletes list from the database.
+func (r SQLiteListRepository) Delete(listName string) error {
+	if r.Check(listName) == false {
 		return errors.New("List not found")
 	}
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	var query = "DELETE FROM lists WHERE listname = '" + listname + "';"
-	statement, err := database.Prepare(query)
-	statement.Exec()
+	err := r.TaskRepository.DeleteTaskList(listName)
 	if err != nil {
 		return err
 	}
-	return nil
+	query := "DELETE FROM lists WHERE listname = '" + listName + "';"
+	statement, err := database.Prepare(query)
+	statement.Exec()
+	return err
 }
 
-//Check ...
-func (r SQLiteListRepository) Check(listname string) bool {
+// Check method checks if a list exists in the database.
+func (r SQLiteListRepository) Check(listName string) bool {
 	database, _ := sql.Open("sqlite3", "./test.db")
 	defer database.Close()
-	query := "SELECT listname FROM lists where listname='" + listname + "'; "
+	query := "SELECT listname FROM lists where listname='" + listName + "'; "
 	rows, err := database.Query(query)
 	defer rows.Close()
 	if err != nil {
 		return false
 	}
-	var name string
-	count := 0
-	for rows.Next() {
-		count++
-		rows.Scan(&name)
-	}
-	if count == 0 {
-		return false
-	}
-	return true
+	return rows.Next()
 }
 
-//ListModelFactory ...
+// ListModelFactory takes input as List and returns a ListModel.
 func (r SQLiteListRepository) ListModelFactory(list List, time string) ListModel {
 	listmodel := ListModel{listName: list.Name, createdAt: time}
 	return listmodel

@@ -10,22 +10,36 @@ import (
 
 func main() {
 	router := mux.NewRouter()
-	listRepository := SQLiteListRepository{}
 	taskRepository := SQLiteTaskRepository{}
-	getlistintent := GetListIntent{listRepository, taskRepository}
-	createlistintent := CreateListIntent{listRepository}
-	deletelistintent := DeleteListIntent{listRepository, taskRepository}
-	deletetaskintent := DeleteTaskIntent{taskRepository}
-	updatetaskintent := UpdateTaskIntent{taskRepository}
-	gettaskintent := GetTaskIntent{taskRepository}
-	addtaskintent := AddTaskIntent{taskRepository, listRepository}
+	listRepository := SQLiteListRepository{taskRepository}
+	getListIntent := GetListIntent{listRepository}
+	createListIntent := CreateListIntent{listRepository}
+	deleteListIntent := DeleteListIntent{listRepository}
+	deleteTaskIntent := DeleteTaskIntent{taskRepository}
+	updateTaskIntent := UpdateTaskIntent{taskRepository}
+	getTaskIntent := GetTaskIntent{taskRepository}
+	addTaskIntent := AddTaskIntent{taskRepository, listRepository}
 
-	router.HandleFunc("/lists", createlistintent.Enact).Methods("POST")
-	router.HandleFunc("/lists/{id}", deletelistintent.Enact).Methods("DELETE")
-	router.HandleFunc("/lists/{id}", getlistintent.Enact).Methods("GET")
-	router.HandleFunc("/tasks/{id}", gettaskintent.Enact).Methods("GET")
-	router.HandleFunc("/tasks", addtaskintent.Enact).Methods("POST")
-	router.HandleFunc("/tasks/{id}", deletetaskintent.Enact).Methods("DELETE")
-	router.HandleFunc("/tasks", updatetaskintent.Enact).Methods("PUT")
+	router.HandleFunc("/lists", createListIntent.Enact).Methods("POST")
+	router.HandleFunc("/lists/{id}", deleteListIntent.Enact).Methods("DELETE")
+	router.HandleFunc("/lists/{id}", getListIntent.Enact).Methods("GET")
+	router.HandleFunc("/tasks/{id}", getTaskIntent.Enact).Methods("GET")
+	router.HandleFunc("/tasks", addTaskIntent.Enact).Methods("POST")
+	router.HandleFunc("/tasks/{id}", deleteTaskIntent.Enact).Methods("DELETE")
+	router.HandleFunc("/tasks", updateTaskIntent.Enact).Methods("PUT")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
+
+// Use decoder:done
+//Add comments:done
+//Use camel casing:done
+//ReName getall and other funcctions:done
+//check rows.next:done
+//http write in one line
+//return error in one line:done
+//break line:done
+//define variables in a single block:done
+//open db only once
+//gitignore.io
+//enviroment constants
+//change dependencies:done

@@ -8,32 +8,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//GetListIntent ...
+// GetListIntent used to get a list of tasks from the repository.
 type GetListIntent struct {
 	ListRepository ListRepository
-	TaskRepository TaskRepository
 }
 
-//Enact ...
+// Enact takes list id as URL parameter and serves a list of tasks.
 func (i GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	exists := i.ListRepository.Check(vars["id"])
-	if exists == false {
-		fmt.Fprintf(w, "List doesnt exist")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	mocklist, err := i.ListRepository.Get(vars["id"])
 	if err != nil {
-		fmt.Fprintf(w, err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	mocklist.Tasks, err = i.TaskRepository.GetAll(vars["id"])
-	if err != nil {
-		fmt.Fprintf(w, err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	// Error handling shouldn't be neglected. Can use OKGO.
+
 	data, err := json.Marshal(mocklist)
 	if err != nil {
 		fmt.Println(err)
@@ -42,4 +30,5 @@ func (i GetListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+	return
 }

@@ -7,25 +7,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//DeleteListIntent ...
+// DeleteListIntent used to delete list of tasks from the repository.
 type DeleteListIntent struct {
 	ListRepository ListRepository
-	TaskRepository TaskRepository
 }
 
-//Enact ...
+// Enact gets listname from URL parameter and deletes the list
 func (i DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	err := i.ListRepository.Delete(vars["id"])
 	if err != nil {
-		fmt.Fprintf(w, err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	err = i.TaskRepository.Deletelist(vars["id"])
-	if err == nil {
-		fmt.Fprintf(w, err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	} else {
 		fmt.Fprintf(w, "delete list succesfully")
 		w.WriteHeader(http.StatusOK)

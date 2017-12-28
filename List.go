@@ -1,6 +1,6 @@
 package main
 
-//List ...
+// List Entity.
 type List struct {
 	Name      string
 	Tasks     []Task
