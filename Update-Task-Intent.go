@@ -12,7 +12,7 @@ type UpdateTaskIntent struct {
 	TaskRepository TaskRepository
 }
 
-// Enact method is usedt change the status of task completed.
+// Enact method is usedt change the status of task completed .
 func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	var reqJSON Task
 	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {

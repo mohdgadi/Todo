@@ -21,7 +21,7 @@ type ListRepository interface {
 	ListModelFactory(list List, time string) ListModel
 }
 
-// SQLiteListRepository implementing ListRepository interface...
+// SQLiteListRepository implementing ListRepository interface.
 type SQLiteListRepository struct {
 	TaskRepository TaskRepository
 }
