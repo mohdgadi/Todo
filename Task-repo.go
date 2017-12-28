@@ -34,7 +34,10 @@ type SQLiteTaskRepository struct {
 func (t SQLiteTaskRepository) Add(tasks Task, listName string) error {
 	createdAt := time.Now().Local().Format(TimeFormat)
 	task := TaskModelFactory(tasks, listName, createdAt)
-	database, _ := sql.Open(DbType, DbName) //enviroment variables
+	database, err := sql.Open(DbType, DbName) //enviroment variables
+	if err != nil {
+		return err
+	}
 	defer database.Close()
 	query := "INSERT INTO tasks (createdat,name,status,listname) VALUES ( '" +
 		task.createdAt + "','" + task.name + "','0','" + task.listName + "')"
@@ -45,7 +48,10 @@ func (t SQLiteTaskRepository) Add(tasks Task, listName string) error {
 
 // Delete method deletes a task from the database.
 func (t SQLiteTaskRepository) Delete(ID string) error {
-	database, _ := sql.Open(DbType, DbName)
+	database, err := sql.Open(DbType, DbName)
+	if err != nil {
+		return err
+	}
 	defer database.Close()
 	query := "DELETE FROM tasks WHERE ID = '" + ID + "' ;"
 	statement, err := database.Prepare(query)
@@ -70,7 +76,10 @@ func (t SQLiteTaskRepository) Get(ID string) (Task, error) {
 		status    int
 		listName  string
 	)
-	database, _ := sql.Open(DbType, DbName)
+	database, err := sql.Open(DbType, DbName)
+	if err != nil {
+		return Task{}, err
+	}
 	defer database.Close()
 	query := "SELECT * FROM tasks WHERE ID = '" + ID + "' ;"
 	rows, err := database.Query(query)
@@ -93,7 +102,10 @@ func (t SQLiteTaskRepository) Get(ID string) (Task, error) {
 
 // DeleteTaskList method deletes a list of task having same listname.
 func (t SQLiteTaskRepository) DeleteTaskList(listName string) error {
-	database, _ := sql.Open(DbType, DbName)
+	database, err := sql.Open(DbType, DbName)
+	if err != nil {
+		return err
+	}
 	defer database.Close()
 	query := "DELETE FROM tasks WHERE listname = '" + listName + "';"
 	statement, err := database.Prepare(query)
@@ -104,7 +116,10 @@ func (t SQLiteTaskRepository) DeleteTaskList(listName string) error {
 // Update method updates task status.
 func (t SQLiteTaskRepository) Update(task Task) error {
 	var status string
-	database, _ := sql.Open(DbType, DbName)
+	database, err := sql.Open(DbType, DbName)
+	if err != nil {
+		return err
+	}
 	defer database.Close()
 	if task.Status == false {
 		status = "0"
@@ -128,7 +143,10 @@ func (t SQLiteTaskRepository) GetTaskList(listName string) ([]Task, error) {
 		ListName  string
 		name      string
 	)
-	database, _ := sql.Open(DbType, DbName)
+	database, err := sql.Open(DbType, DbName)
+	if err != nil {
+		return nil, err
+	}
 	defer database.Close()
 	query := "SELECT * FROM tasks where listname='" + listName + "'; "
 	rows, err := database.Query(query)

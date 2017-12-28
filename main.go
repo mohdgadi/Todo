@@ -29,16 +29,3 @@ func main() {
 	router.HandleFunc("/tasks", updateTaskIntent.Enact).Methods("PUT")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
-
-// Use decoder:done
-//Add comments:done
-//Use camel casing:done
-//ReName getall and other funcctions:done
-//check rows.next:done
-//http write in one line:done
-//return error in one line:done
-//break line:done
-//define variables in a single block:done
-//gitignore.io:done
-//enviroment constants:done
-//change dependencies:done
