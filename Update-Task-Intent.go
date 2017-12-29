@@ -8,9 +8,6 @@ import (
 )
 
 // UpdateTaskIntent used to update task status in the database.
-type UpdateTaskIntent struct {
-	TaskRepository TaskRepository
-}
 
 // Enact method is usedt change the status of task completed .
 func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
