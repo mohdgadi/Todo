@@ -12,13 +12,18 @@ type ListModel struct {
 	createdAt string
 }
 
+// ListModelFactory takes input as List and returns a ListModel.
+func (r SQLiteListRepository) ListModelFactory(list List, time string) ListModel {
+	listmodel := ListModel{listName: list.Name, createdAt: time}
+	return listmodel
+}
+
 // ListRepository interface...
 type ListRepository interface {
 	Create(list List) error
 	Delete(listName string) error
 	Check(listName string) bool
 	Get(listName string) (List, error)
-	ListModelFactory(list List, time string) ListModel
 }
 
 // SQLiteListRepository implementing ListRepository interface.
@@ -108,10 +113,4 @@ func (r SQLiteListRepository) Check(listName string) bool {
 		return false
 	}
 	return rows.Next()
-}
-
-// ListModelFactory takes input as List and returns a ListModel.
-func (r SQLiteListRepository) ListModelFactory(list List, time string) ListModel {
-	listmodel := ListModel{listName: list.Name, createdAt: time}
-	return listmodel
 }
