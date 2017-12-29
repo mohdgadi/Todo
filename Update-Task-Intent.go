@@ -5,15 +5,22 @@ import (
 	"fmt"
 
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 // UpdateTaskIntent used to update task status in the database.
+type UpdateTaskIntent struct {
+	ListRepository ListRepository
+}
 
 // Enact method is usedt change the status of task completed .
 func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	var reqJSON Task
 	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
-		err := i.TaskRepository.Update(reqJSON)
+		status := reqJSON.Status
+		err := i.ListRepository.UpdateTask(vars["listid"], vars["taskid"], status)
 		if err == nil {
 			fmt.Fprintf(w, "Task updated succesfully")
 			w.WriteHeader(http.StatusOK)

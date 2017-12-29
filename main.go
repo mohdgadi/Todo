@@ -10,22 +10,21 @@ import (
 
 func main() {
 	router := mux.NewRouter()
-	taskRepository := SQLiteTaskRepository{}
-	listRepository := SQLiteListRepository{taskRepository}
+	listRepository := SQLiteListRepository{}
 	getListIntent := GetListIntent{listRepository}
 	createListIntent := CreateListIntent{listRepository}
 	deleteListIntent := DeleteListIntent{listRepository}
-	deleteTaskIntent := DeleteTaskIntent{taskRepository}
-	updateTaskIntent := UpdateTaskIntent{taskRepository}
-	getTaskIntent := GetTaskIntent{taskRepository}
-	addTaskIntent := AddTaskIntent{taskRepository, listRepository}
+	deleteTaskIntent := DeleteTaskIntent{listRepository}
+	updateTaskIntent := UpdateTaskIntent{listRepository}
+	getTaskIntent := GetTaskIntent{listRepository}
+	addTaskIntent := AddTaskIntent{listRepository}
 
 	router.HandleFunc("/lists", createListIntent.Enact).Methods("POST")
 	router.HandleFunc("/lists/{id}", deleteListIntent.Enact).Methods("DELETE")
 	router.HandleFunc("/lists/{id}", getListIntent.Enact).Methods("GET")
-	router.HandleFunc("/tasks/{id}", getTaskIntent.Enact).Methods("GET")
-	router.HandleFunc("/tasks", addTaskIntent.Enact).Methods("POST")
-	router.HandleFunc("/tasks/{id}", deleteTaskIntent.Enact).Methods("DELETE")
-	router.HandleFunc("/tasks", updateTaskIntent.Enact).Methods("PUT")
+	router.HandleFunc("/lists/{listid}/tasks/{taskid}", getTaskIntent.Enact).Methods("GET")
+	router.HandleFunc("/lists/{listid}/tasks", addTaskIntent.Enact).Methods("POST")
+	router.HandleFunc("/lists/{listid}/tasks/{taskid}", deleteTaskIntent.Enact).Methods("DELETE")
+	router.HandleFunc("/lists/{listid}/tasks/{taskid}", updateTaskIntent.Enact).Methods("PUT")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }

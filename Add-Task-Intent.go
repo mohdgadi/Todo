@@ -5,28 +5,24 @@ import (
 	"fmt"
 
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 // AddTaskIntent used to add task in the repository.
 type AddTaskIntent struct {
-	TaskRepository TaskRepository
 	ListRepository ListRepository
 }
 
 // Enact takes JSON request and add task to the list.
 func (i AddTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	var (
 		reqJSON List
-		task    Task
 	)
 	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
-		task = reqJSON.Tasks[0]
-		check := i.ListRepository.Check(reqJSON.Name)
-		if check == false {
-			http.Error(w, "List doesnt exist", http.StatusBadRequest)
-			return
-		}
-		err = i.TaskRepository.Add(task, reqJSON.Name)
+		reqJSON.Name = vars["listid"]
+		err = i.ListRepository.AddTaskToList(reqJSON)
 		if err == nil {
 			fmt.Fprintf(w, "Task added succesfully")
 			w.WriteHeader(http.StatusOK)
