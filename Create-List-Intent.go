@@ -18,6 +18,7 @@ func (c CreateListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
 		if reqJSON.Name == "" {
 			http.Error(w, "Request name cant be empty", http.StatusBadRequest)
+			return
 		}
 		list := List{Name: reqJSON.Name}
 		err := c.ListRepository.Create(list)
