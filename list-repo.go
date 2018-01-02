@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -32,6 +31,8 @@ type ListRepository interface {
 	DeleteTask(ID string, listName string) error
 	GetTask(ID string, listName string) (Task, error)
 	UpdateTask(listName string, taskID string, state bool) error
+	GetAllTasksFromList(listName string) ([]Task, error)
+	DeleteAllTasksFromList(string) error
 }
 
 // SQLiteListRepository implementing ListRepository interface.
@@ -43,10 +44,6 @@ func (r SQLiteListRepository) Get(listName string) (List, error) {
 	var (
 		name      string
 		createdAt string
-		tasklist  []Task
-		ID        int
-		status    int
-		Listname  string
 		list      List
 	)
 	database, err := sql.Open(DbType, DbName)
@@ -65,26 +62,12 @@ func (r SQLiteListRepository) Get(listName string) (List, error) {
 		rows.Scan(&name, &createdAt)
 		count++
 	}
-	fmt.Println(count)
 	if count == 0 {
 		return List{}, errors.New("List doesnt exist")
 	}
 	list.Name = name
 	list.CreatedAt = createdAt
-	query = "SELECT * FROM tasks where listname='" + listName + "'; "
-	rows, err = database.Query(query)
-
-	for rows.Next() {
-		rows.Scan(&ID, &createdAt, &name, &status, &Listname)
-		task := Task{ID: ID, Name: name, CreatedAt: createdAt}
-		if status == 0 {
-			task.Status = false
-		} else {
-			task.Status = true
-		}
-		tasklist = append(tasklist, task)
-	}
-	list.Tasks = tasklist
+	list.Tasks, err = r.GetAllTasksFromList(listName)
 	return list, err
 }
 
@@ -116,14 +99,12 @@ func (r SQLiteListRepository) Delete(listName string) error {
 		return err
 	}
 	defer database.Close()
-	query := "DELETE FROM tasks WHERE listname = '" + listName + "';"
-	statement, err := database.Prepare(query)
-	statement.Exec()
+	err = r.DeleteAllTasksFromList(listName)
 	if err != nil {
 		return err
 	}
-	query = "DELETE FROM lists WHERE listname = '" + listName + "';"
-	statement, err = database.Prepare(query)
+	query := "DELETE FROM lists WHERE listname = '" + listName + "';"
+	statement, err := database.Prepare(query)
 	statement.Exec()
 	return err
 }
@@ -146,9 +127,6 @@ func (r SQLiteListRepository) Check(listName string) bool {
 
 // DeleteTask method deletes a task from the database.
 func (r SQLiteListRepository) DeleteTask(ID string, listName string) error {
-	if r.Check(listName) == false {
-		return errors.New("List doesnt exist")
-	}
 	database, err := sql.Open(DbType, DbName)
 	if err != nil {
 		return err
@@ -197,9 +175,6 @@ func (r SQLiteListRepository) GetTask(ID string, list string) (Task, error) {
 		status    int
 		listName  string
 	)
-	if r.Check(list) == false {
-		return Task{}, errors.New("List doesnt exists")
-	}
 	database, err := sql.Open(DbType, DbName)
 	if err != nil {
 		return Task{}, err
@@ -227,9 +202,6 @@ func (r SQLiteListRepository) GetTask(ID string, list string) (Task, error) {
 // UpdateTask method updates task status.
 func (r SQLiteListRepository) UpdateTask(listName string, taskID string, state bool) error {
 	var status string
-	if r.Check(listName) == false {
-		return errors.New("List not found")
-	}
 	database, err := sql.Open(DbType, DbName)
 	if err != nil {
 		return err
@@ -252,6 +224,49 @@ func (r SQLiteListRepository) UpdateTask(listName string, taskID string, state b
 		return errors.New("Updation failed")
 	}
 	return err
+}
+
+// DeleteAllTasksFromList deletes all those task having the listname.
+func (r SQLiteListRepository) DeleteAllTasksFromList(listName string) error {
+	database, err := sql.Open(DbType, DbName)
+	defer database.Close()
+	if err != nil {
+		return err
+	}
+	query := "DELETE FROM tasks WHERE listname = '" + listName + "';"
+	statement, err := database.Prepare(query)
+	statement.Exec()
+	return err
+}
+
+// GetAllTasksFromList fetches an array of tasks from a given list and returns it.
+func (r SQLiteListRepository) GetAllTasksFromList(listName string) ([]Task, error) {
+	var (
+		tasklist  []Task
+		ID        int
+		name      string
+		createdAt string
+		status    int
+		Listname  string
+	)
+	database, err := sql.Open(DbType, DbName)
+	defer database.Close()
+	if err != nil {
+		return nil, err
+	}
+	query := "SELECT * FROM tasks where listname='" + listName + "'; "
+	rows, err := database.Query(query)
+	for rows.Next() {
+		rows.Scan(&ID, &createdAt, &name, &status, &Listname)
+		task := Task{ID: ID, Name: name, CreatedAt: createdAt}
+		if status == 0 {
+			task.Status = false
+		} else {
+			task.Status = true
+		}
+		tasklist = append(tasklist, task)
+	}
+	return tasklist, err
 }
 
 func taskModelFactory(tasks Task, listName string, createdAt string) TaskModel {

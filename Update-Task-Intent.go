@@ -11,14 +11,20 @@ import (
 
 // UpdateTaskIntent used to update task status in the database.
 type UpdateTaskIntent struct {
-	ListRepository ListRepository
+	ListRepository            ListRepository
+	ValidateTaskSpecification ValidateTaskSpecification
 }
 
 // Enact method is usedt change the status of task completed .
 func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	err := i.ValidateTaskSpecification.Enact(vars["taskid"], vars["listid"])
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
 	var reqJSON Task
-	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
+	if err = json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
 		status := reqJSON.Status
 		err := i.ListRepository.UpdateTask(vars["listid"], vars["taskid"], status)
 		if err == nil {
