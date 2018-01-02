@@ -3,15 +3,14 @@ package main
 import "testing"
 
 func TestCreateList(t *testing.T) {
-
 	list := List{Name: "newlist2"}
-	listrepository := SQLiteListRepository{}
-	err := listrepository.Create(list)
+	listRepository := SQLiteListRepository{}
+	err := listRepository.Create(list)
 	if err != nil {
 		t.Errorf(err.Error())
 		return
 	}
-	list2, err := listrepository.Get(list.Name)
+	list2, err := listRepository.Get(list.Name)
 	if err != nil {
 		t.Errorf(err.Error())
 		return

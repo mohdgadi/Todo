@@ -4,8 +4,8 @@ import "testing"
 
 func TestGetList(t *testing.T) {
 	listName := "List1"
-	listrepository := SQLiteListRepository{}
-	_, err := listrepository.Get(listName)
+	listRepository := SQLiteListRepository{}
+	_, err := listRepository.Get(listName)
 	if err != nil {
 		t.Errorf(err.Error())
 		return
