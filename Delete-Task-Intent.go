@@ -23,5 +23,4 @@ func (i DeleteTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Error(w, err.Error(), http.StatusBadRequest)
-
 }

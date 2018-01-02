@@ -243,7 +243,14 @@ func (r SQLiteListRepository) UpdateTask(listName string, taskID string, state b
 	query := "UPDATE tasks SET status= '" + status +
 		"' WHERE ID= '" + taskID + "';"
 	statement, err := database.Prepare(query)
-	_, err = statement.Exec()
+	res, err := statement.Exec()
+	if err != nil {
+		return err
+	}
+	affected, err := res.RowsAffected()
+	if affected == 0 {
+		return errors.New("Updation failed")
+	}
 	return err
 }
 

@@ -30,5 +30,4 @@ func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Bad request", http.StatusBadRequest)
 	}
-
 }

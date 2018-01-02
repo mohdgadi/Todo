@@ -22,6 +22,9 @@ func (i AddTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	)
 	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
 		reqJSON.Name = vars["listid"]
+		if len(reqJSON.Tasks) == 0 || reqJSON.Tasks[0].Name == "" {
+			http.Error(w, "Task cannot be empty", http.StatusBadRequest)
+		}
 		err = i.ListRepository.AddTaskToList(reqJSON)
 		if err == nil {
 			fmt.Fprintf(w, "Task added succesfully")
