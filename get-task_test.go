@@ -14,5 +14,4 @@ func TestGetTask(t *testing.T) {
 	if task.ID != 34 {
 		t.Errorf("Get task failed")
 	}
-
 }
