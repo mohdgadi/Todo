@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strconv"
 	"time"
+
+	"github.com/angadn/okgo"
 )
 
 // ListModel ...
@@ -45,76 +47,99 @@ func (r SQLiteListRepository) Get(listName string) (List, error) {
 		name      string
 		createdAt string
 		list      List
+		database  *sql.DB
+		rows      *sql.Rows
+		times     time.Time
 	)
-	database, err := sql.Open(DbType, DbName)
-	if err != nil {
-		return List{}, err
-	}
-	defer database.Close()
-	query := "SELECT * FROM " + ListTableName + " where listname='" + listName + "'; "
-	rows, err := database.Query(query)
+	var err error
+	okgo.NewOKGO(&err).On(func() error {
+		database, err = sql.Open(DbType, DbName)
+		return err
+	}).On(func() error {
+		query := "SELECT * FROM " + ListTableName + " where listname='" + listName + "'; "
+		rows, err = database.Query(query)
+		return err
+	}).On(func() error {
+		for rows.Next() {
+			err = rows.Scan(&name, &createdAt)
+			if err != nil {
+				break
+			}
+		}
+		return err
+	}).On(func() error {
+		if name == "" {
+			err = errors.New("List doesnt exist")
+		}
+		return err
+	}).On(func() error {
+		list.Name = name
+		times, err = time.Parse(TimeFormat, createdAt)
+		return err
+	}).On(func() error {
+		list.CreatedAt = times
+		list.Tasks, err = r.GetAllTasksFromList(listName)
+		return err
+	}).Run()
 	if err != nil {
 		return List{}, err
 	}
 	defer rows.Close()
-	for rows.Next() {
-		err = rows.Scan(&name, &createdAt)
-		if err != nil {
-			return List{}, err
-		}
-	}
-	if name == "" {
-		return List{}, errors.New("List doesnt exist")
-	}
-	list.Name = name
-	time, err := time.Parse(TimeFormat, createdAt)
-	if err != nil {
-		return List{}, err
-	}
-	list.CreatedAt = time
-	list.Tasks, err = r.GetAllTasksFromList(listName)
+	defer database.Close()
 	return list, err
 }
 
 // Create method adds a list to the repository.
 func (r SQLiteListRepository) Create(list List) error {
-	err := r.createListTableIfNotExists()
-	if err != nil {
+	var (
+		err       error
+		listmodel ListModel
+		query     string
+		statement *sql.Stmt
+		database  *sql.DB
+	)
+	okgo.NewOKGO(&err).On(func() error {
+		err = r.createListTableIfNotExists()
 		return err
-	}
-	database, err := sql.Open(DbType, DbName)
-	if err != nil {
+	}).On(func() error {
+		database, err = sql.Open(DbType, DbName)
 		return err
-	}
+	}).On(func() error {
+		listmodel = r.listModelFactory(list, time.Now().Local().Format(TimeFormat))
+		query = "INSERT INTO " + ListTableName + " (listname , createdat) VALUES ( '" +
+			listmodel.listName + "' , '" + listmodel.createdAt + "')"
+		statement, err = database.Prepare(query)
+		return err
+	}).On(func() error {
+		_, err = statement.Exec()
+		return err
+	}).Run()
 	defer database.Close()
-	listmodel := r.listModelFactory(list, time.Now().Local().Format(TimeFormat))
-	query := "INSERT INTO " + ListTableName + " (listname , createdat) VALUES ( '" +
-		listmodel.listName + "' , '" + listmodel.createdAt + "')"
-	statement, err := database.Prepare(query)
-	if err != nil {
-		return err
-	}
-	_, err = statement.Exec()
 	return err
 }
 
 // Delete method deletes list from the database.
 func (r SQLiteListRepository) Delete(listName string) error {
-	database, err := sql.Open(DbType, DbName)
-	if err != nil {
+	var (
+		err       error
+		database  *sql.DB
+		statement *sql.Stmt
+	)
+	okgo.NewOKGO(&err).On(func() error {
+		database, err = sql.Open(DbType, DbName)
 		return err
-	}
+	}).On(func() error {
+		err = r.deleteAllTasksFromList(listName)
+		return err
+	}).On(func() error {
+		query := "DELETE FROM " + ListTableName + " WHERE listname = '" + listName + "';"
+		statement, err = database.Prepare(query)
+		return err
+	}).On(func() error {
+		_, err = statement.Exec()
+		return err
+	}).Run()
 	defer database.Close()
-	err = r.deleteAllTasksFromList(listName)
-	if err != nil {
-		return err
-	}
-	query := "DELETE FROM " + ListTableName + " WHERE listname = '" + listName + "';"
-	statement, err := database.Prepare(query)
-	if err != nil {
-		return err
-	}
-	_, err = statement.Exec()
 	return err
 }
 
@@ -136,107 +161,133 @@ func (r SQLiteListRepository) CheckIfExists(listName string) bool {
 
 // DeleteTaskFromList method deletes a task from the database.
 func (r SQLiteListRepository) DeleteTaskFromList(taskID string) error {
-	database, err := sql.Open(DbType, DbName)
-	if err != nil {
+	var (
+		err       error
+		database  *sql.DB
+		statement *sql.Stmt
+		affected  int64
+		res       sql.Result
+	)
+	okgo.NewOKGO(&err).On(func() error {
+		database, err = sql.Open(DbType, DbName)
 		return err
-	}
+	}).On(func() error {
+		query := "DELETE FROM " + TaskTableName + " WHERE ID = '" + taskID + "' ;"
+		statement, err = database.Prepare(query)
+		return err
+	}).On(func() error {
+		res, err = statement.Exec()
+		return err
+	}).On(func() error {
+		affected, err = res.RowsAffected()
+		return err
+	}).On(func() error {
+		if affected == 0 {
+			return errors.New("Entry Not found")
+		}
+		return nil
+	}).Run()
 	defer database.Close()
-	query := "DELETE FROM " + TaskTableName + " WHERE ID = '" + taskID + "' ;"
-	statement, err := database.Prepare(query)
-	if err != nil {
-		return err
-	}
-	res, err := statement.Exec()
-	if err != nil {
-		return err
-	}
-	affected, err := res.RowsAffected()
-	if affected == 0 {
-		return errors.New("Entry Not found")
-	}
 	return err
 }
 
 // AddTaskToList method adds task to the database.
 func (r SQLiteListRepository) AddTaskToList(list List) error {
-	err := r.createTaskTableIfNotExists()
-	if err != nil {
+	var (
+		err       error
+		database  *sql.DB
+		statement *sql.Stmt
+	)
+	okgo.NewOKGO(&err).On(func() error {
+		err = r.createTaskTableIfNotExists()
 		return err
-	}
-	database, err := sql.Open(DbType, DbName)
-	if err != nil {
+	}).On(func() error {
+		database, err = sql.Open(DbType, DbName)
 		return err
-	}
+	}).On(func() error {
+		list.Tasks[0].CreatedAt = time.Now()
+		list.Tasks[0].Status = false
+		task := taskModelFactory(list.Tasks[0], list.Name)
+		query := "INSERT INTO " + TaskTableName + " (createdat,name,status,listname) VALUES ( '" +
+			task.createdAt + "','" + task.name + "','0','" + list.Name + "')"
+		statement, err = database.Prepare(query)
+		return err
+	}).On(func() error {
+		_, err = statement.Exec()
+		return err
+	}).Run()
 	defer database.Close()
-	list.Tasks[0].CreatedAt = time.Now()
-	list.Tasks[0].Status = false
-	task := taskModelFactory(list.Tasks[0], list.Name)
-	query := "INSERT INTO " + TaskTableName + " (createdat,name,status,listname) VALUES ( '" +
-		task.createdAt + "','" + task.name + "','0','" + task.listName + "')"
-	statement, err := database.Prepare(query)
-	if err != nil {
-		return err
-	}
-	_, err = statement.Exec()
 	return err
 }
 
 // GetTaskFromList method retrieves a task from the database.
 func (r SQLiteListRepository) GetTaskFromList(taskID string) (Task, error) {
 	var (
+		err      error
+		database *sql.DB
 		taskList []Task
+		rows     *sql.Rows
 	)
-	database, err := sql.Open(DbType, DbName)
-	if err != nil {
-		return Task{}, err
-	}
-	defer database.Close()
-	query := "SELECT * FROM " + TaskTableName + " WHERE ID = '" + taskID + "' ;"
-	rows, err := database.Query(query)
+	okgo.NewOKGO(&err).On(func() error {
+		database, err = sql.Open(DbType, DbName)
+		return err
+	}).On(func() error {
+		query := "SELECT * FROM " + TaskTableName + " WHERE ID = '" + taskID + "' ;"
+		rows, err = database.Query(query)
+		return err
+	}).On(func() error {
+		taskList, err = r.rowsToTaskFactory(rows)
+		return err
+	}).Run()
 	if err != nil {
 		return Task{}, err
 	}
 	defer rows.Close()
-	taskList, err = r.rowsToTaskFactory(rows)
-	if err != nil {
-		return Task{}, err
-	}
+	defer database.Close()
 	return taskList[0], nil
 }
 
 // UpdateTaskStatus method updates task status.
 func (r SQLiteListRepository) UpdateTaskStatus(list List) error {
-	var status string
-	task := list.Tasks[0]
-	database, err := sql.Open(DbType, DbName)
-	if err != nil {
+	var (
+		err       error
+		database  *sql.DB
+		status    string
+		task      Task
+		res       sql.Result
+		statement *sql.Stmt
+		affected  int64
+	)
+
+	okgo.NewOKGO(&err).On(func() error {
+		task = list.Tasks[0]
+		database, err = sql.Open(DbType, DbName)
 		return err
-	}
+	}).On(func() error {
+		switch task.Status {
+		case true:
+			status = strconv.Itoa(Completed)
+		default:
+			status = strconv.Itoa(Pending)
+		}
+		taskID := strconv.Itoa(task.ID)
+		query := "UPDATE " + TaskTableName + " SET status= '" + status +
+			"' WHERE ID= '" + taskID + "';"
+		statement, err = database.Prepare(query)
+		return err
+	}).On(func() error {
+		res, err = statement.Exec()
+		return err
+	}).On(func() error {
+		affected, err = res.RowsAffected()
+		return err
+	}).On(func() error {
+		if affected == 0 {
+			return errors.New("Updation failed")
+		}
+		return nil
+	}).Run()
 	defer database.Close()
-	switch task.Status {
-	case true:
-		status = strconv.Itoa(Completed)
-	default:
-		status = strconv.Itoa(Pending)
-	}
-	taskID := strconv.Itoa(task.ID)
-	query := "UPDATE " + TaskTableName + " SET status= '" + status +
-		"' WHERE ID= '" + taskID + "';"
-	statement, err := database.Prepare(query)
-	if err != nil {
-		return err
-	}
-	res, err := statement.Exec()
-	if err != nil {
-		return err
-	}
-	affected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if affected == 0 {
-		return errors.New("Updation failed")
-	}
 	return err
 }
 
@@ -325,17 +376,21 @@ func (r SQLiteListRepository) rowsToTaskFactory(rows *sql.Rows) ([]Task, error) 
 		name      string
 		status    int
 		lstName   string
+		err       error
+		times     time.Time
 	)
 	for rows.Next() {
-		err := rows.Scan(&id, &createdAt, &name, &status, &lstName)
+		okgo.NewOKGO(&err).On(func() error {
+			err = rows.Scan(&id, &createdAt, &name, &status, &lstName)
+			return err
+		}).On(func() error {
+			times, err = time.Parse(TimeFormat, createdAt)
+			return err
+		}).Run()
 		if err != nil {
 			return nil, err
 		}
-		time, err := time.Parse(TimeFormat, createdAt)
-		if err != nil {
-			return nil, err
-		}
-		task = Task{ID: id, Name: name, CreatedAt: time}
+		task = Task{ID: id, Name: name, CreatedAt: times}
 		if status == 0 {
 			task.Status = false
 		} else {

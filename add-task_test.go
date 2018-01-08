@@ -4,7 +4,7 @@ import "testing"
 
 func TestAddTaskInExistingList(t *testing.T) {
 	listRepository := SQLiteListRepository{}
-	list := List{Name: "newlist2", Tasks: []Task{Task{Name: "taskn"}}}
+	list := List{Name: "list1", Tasks: []Task{Task{Name: "taskn"}}}
 	err := listRepository.AddTaskToList(list)
 	if err != nil {
 		t.Errorf(err.Error())

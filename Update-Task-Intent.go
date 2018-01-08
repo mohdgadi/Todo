@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"net/http"
 
@@ -24,6 +25,11 @@ func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	}
 	var task Task
 	if err = json.NewDecoder(r.Body).Decode(&task); err == nil {
+		task.ID, err = strconv.Atoi(vars["taskid"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		list := List{Tasks: []Task{task}}
 		err := i.ListRepository.UpdateTaskStatus(list)
 		if err == nil {

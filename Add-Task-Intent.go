@@ -19,18 +19,17 @@ func (i AddTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var (
 		task Task
-		list List
 	)
 	if err := json.NewDecoder(r.Body).Decode(&task); err == nil {
 		if task.Name == "" {
 			http.Error(w, "Task cannot be empty", http.StatusBadRequest)
+			return
 		}
-		list.Name = vars["listid"]
-		if i.ListRepository.CheckIfExists(list.Name) == false {
+		if i.ListRepository.CheckIfExists(vars["listid"]) == false {
 			http.Error(w, "List doesnt exists", http.StatusBadRequest)
-
+			return
 		}
-		list := List{Tasks: []Task{task}}
+		list := List{Tasks: []Task{task}, Name: vars["listid"]}
 		err = i.ListRepository.AddTaskToList(list)
 		if err == nil {
 			fmt.Fprintf(w, "Task added succesfully")
