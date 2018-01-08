@@ -391,7 +391,7 @@ func (r SQLiteListRepository) rowsToTaskFactory(rows *sql.Rows) ([]Task, error) 
 			return nil, err
 		}
 		task = Task{ID: id, Name: name, CreatedAt: times}
-		if status == 0 {
+		if status == Pending {
 			task.Status = false
 		} else {
 			task.Status = true
