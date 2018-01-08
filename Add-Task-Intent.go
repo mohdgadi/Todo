@@ -18,14 +18,20 @@ type AddTaskIntent struct {
 func (i AddTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var (
-		reqJSON List
+		task Task
+		list List
 	)
-	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
-		reqJSON.Name = vars["listid"]
-		if len(reqJSON.Tasks) == 0 || reqJSON.Tasks[0].Name == "" {
+	if err := json.NewDecoder(r.Body).Decode(&task); err == nil {
+		if task.Name == "" {
 			http.Error(w, "Task cannot be empty", http.StatusBadRequest)
 		}
-		err = i.ListRepository.AddTaskToList(reqJSON)
+		list.Name = vars["listid"]
+		if i.ListRepository.CheckIfExists(list.Name) == false {
+			http.Error(w, "List doesnt exists", http.StatusBadRequest)
+
+		}
+		list := List{Tasks: []Task{task}}
+		err = i.ListRepository.AddTaskToList(list)
 		if err == nil {
 			fmt.Fprintf(w, "Task added succesfully")
 			w.WriteHeader(http.StatusOK)

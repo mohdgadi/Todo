@@ -14,13 +14,16 @@ type CreateListIntent struct {
 
 // Enact takes JSON request and creates a list.
 func (c CreateListIntent) Enact(w http.ResponseWriter, r *http.Request) {
-	var reqJSON List
-	if err := json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
-		if reqJSON.Name == "" {
+	var list List
+	if err := json.NewDecoder(r.Body).Decode(&list); err == nil {
+		if list.Name == "" {
 			http.Error(w, "Request name cant be empty", http.StatusBadRequest)
 			return
 		}
-		list := List{Name: reqJSON.Name}
+		if c.ListRepository.CheckIfExists(list.Name) == true {
+			http.Error(w, "List already exist", http.StatusBadRequest)
+			return
+		}
 		err := c.ListRepository.Create(list)
 		if err == nil {
 			fmt.Fprintf(w, "created successfully")

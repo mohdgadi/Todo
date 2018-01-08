@@ -2,7 +2,7 @@ package main
 
 import "testing"
 
-func TestCreateList(t *testing.T) {
+func TestCreateNonExistingList(t *testing.T) {
 	list := List{Name: "newlist2"}
 	listRepository := SQLiteListRepository{}
 	err := listRepository.Create(list)
@@ -17,8 +17,15 @@ func TestCreateList(t *testing.T) {
 	}
 	if list.Name != list2.Name {
 		t.Errorf("Incorrect %s %s", list.Name, list2.Name)
-	} else {
-		t.Logf("list before is %s", list.Name)
-		t.Logf("list after is %s", list2.Name)
+	}
+}
+
+func TestCreateExistingList(t *testing.T) {
+	list := List{Name: "newlist2"}
+	listRepository := SQLiteListRepository{}
+	err := listRepository.Create(list)
+	if err == nil {
+		t.Errorf("List exists but test failed")
+		return
 	}
 }

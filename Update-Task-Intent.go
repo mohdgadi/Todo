@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"net/http"
 
@@ -20,20 +19,19 @@ func (i UpdateTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	err := i.ValidateTaskSpecification.Enact(vars["taskid"], vars["listid"])
 	if err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var reqJSON Task
-	if err = json.NewDecoder(r.Body).Decode(&reqJSON); err == nil {
-		status := reqJSON.Status
-		err := i.ListRepository.UpdateTask(vars["listid"], vars["taskid"], status)
+	var task Task
+	if err = json.NewDecoder(r.Body).Decode(&task); err == nil {
+		list := List{Tasks: []Task{task}}
+		err := i.ListRepository.UpdateTaskStatus(list)
 		if err == nil {
-			fmt.Fprintf(w, "Task updated succesfully")
 			w.WriteHeader(http.StatusOK)
 		} else {
-			http.Error(w, "Bad request", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 }

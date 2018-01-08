@@ -15,6 +15,9 @@ type DeleteListIntent struct {
 // Enact gets listname from URL parameter and deletes the list.
 func (i DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	if i.ListRepository.CheckIfExists(vars["id"]) == false {
+		http.Error(w, "List doesnt exist", http.StatusBadRequest)
+	}
 	err := i.ListRepository.Delete(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

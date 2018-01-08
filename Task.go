@@ -1,9 +1,13 @@
 package main
 
+import (
+	"time"
+)
+
 // Task Entity.
 type Task struct {
-	ID        int
-	Name      string
-	CreatedAt string
-	Status    bool
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"createdat"`
+	Status    bool      `json:"status"`
 }

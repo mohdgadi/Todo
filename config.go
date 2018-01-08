@@ -8,3 +8,15 @@ const DbName = "./test.db"
 
 // TimeFormat depicts format of date
 const TimeFormat = "2006-01-02"
+
+// Pending denotes task is not yet completed
+const Pending = 0
+
+// Completed denotes task has been completed
+const Completed = 1
+
+// ListTableName of the list table in the repository
+const ListTableName = "lists"
+
+// TaskTableName of the task table in the repository
+const TaskTableName = "tasks"

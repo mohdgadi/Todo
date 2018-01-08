@@ -22,10 +22,9 @@ func (i DeleteTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = i.ListRepository.DeleteTask(vars["taskid"], vars["listid"])
+	err = i.ListRepository.DeleteTaskFromList(vars["taskid"])
 	if err == nil {
 		fmt.Fprintf(w, "delete task succesfully")
-		w.WriteHeader(http.StatusOK)
 		return
 	}
 	http.Error(w, err.Error(), http.StatusBadRequest)

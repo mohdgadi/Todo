@@ -12,12 +12,12 @@ type ValidateTaskSpecification struct {
 
 // Enact method checks fetches list by name and checks if given task exists in the List.
 func (r ValidateTaskSpecification) Enact(ID string, listName string) error {
-	list, err := r.listRepository.Get(listName)
+	var taskList = []Task{}
+	taskList, err := r.listRepository.GetAllTasksFromList(listName)
 	if err != nil {
 		return err
 	}
-	tasks := list.Tasks
-	for _, task := range tasks {
+	for _, task := range taskList {
 		if strconv.Itoa(task.ID) == ID {
 			return nil
 		}
