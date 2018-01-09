@@ -25,11 +25,11 @@ func (i AddTaskIntent) Enact(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Task cannot be empty", http.StatusBadRequest)
 			return
 		}
-		if i.ListRepository.CheckIfExists(vars["listid"]) == false {
+		list := List{Tasks: []Task{task}, Name: vars["listid"]}
+		if i.ListRepository.CheckIfExists(list.Name) == false {
 			http.Error(w, "List doesnt exists", http.StatusBadRequest)
 			return
 		}
-		list := List{Tasks: []Task{task}, Name: vars["listid"]}
 		err = i.ListRepository.AddTaskToList(list)
 		if err == nil {
 			fmt.Fprintf(w, "Task added succesfully")

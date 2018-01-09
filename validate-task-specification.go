@@ -22,5 +22,5 @@ func (r ValidateTaskSpecification) Enact(ID string, listName string) error {
 			return nil
 		}
 	}
-	return errors.New("Doesnt belong")
+	return errors.New("Task doesnt belong to the list")
 }

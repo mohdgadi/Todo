@@ -21,7 +21,7 @@ func (c CreateListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if c.ListRepository.CheckIfExists(list.Name) == true {
-			http.Error(w, "List already exist", http.StatusBadRequest)
+			http.Error(w, "List already exists", http.StatusBadRequest)
 			return
 		}
 		err := c.ListRepository.Create(list)

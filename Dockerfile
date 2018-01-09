@@ -5,6 +5,7 @@ COPY * /go/src/todo/
 
 RUN go get github.com/gorilla/mux
 RUN go get github.com/mattn/go-sqlite3
+RUN go get github.com/angadn/okgo
 
 RUN go build
 RUN go install

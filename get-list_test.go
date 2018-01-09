@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestGetList(t *testing.T) {
-	listName := "List1"
+	listName := "list1"
 	listRepository := SQLiteListRepository{}
 	list, err := listRepository.Get(listName)
 	if err != nil {

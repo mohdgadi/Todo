@@ -16,7 +16,8 @@ type DeleteListIntent struct {
 func (i DeleteListIntent) Enact(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if i.ListRepository.CheckIfExists(vars["id"]) == false {
-		http.Error(w, "List doesnt exist", http.StatusBadRequest)
+		http.Error(w, "List doesnt exists", http.StatusBadRequest)
+		return
 	}
 	err := i.ListRepository.Delete(vars["id"])
 	if err != nil {
